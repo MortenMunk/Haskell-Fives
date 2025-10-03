@@ -5,7 +5,7 @@ build-type: Simple
 
 executable haskell-fives
   main-is: Main.hs
-  other-modules: Tile Player Game Boneyard
+  other-modules: Tile Player Game Boneyard Board
   hs-source-dirs: src
   default-language: Haskell2010
   build-depends: base >=4.14 && <5, random-shuffle

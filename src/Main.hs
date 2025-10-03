@@ -1,7 +1,7 @@
 module Main where
 
 import Boneyard
-import Game (dealTwoHands, initBoneyard)
+import Game
 import Player
 import Tile
 
@@ -11,6 +11,8 @@ main = do
   let (hand1, hand2, boneyard) = dealTwoHands shuffled
       player = Player hand1 0
       enemy = Player hand2 0
-  print (length (hand player))
-  print (length (hand enemy))
-  print (length boneyard)
+      starter = pickFirstTurn (player, getHighestTile (hand player)) (enemy, getHighestTile (hand enemy))
+
+  if starter == player
+    then print "player"
+    else print "enemy"
