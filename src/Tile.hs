@@ -5,3 +5,6 @@ data Eye = Zero | One | Two | Three | Four | Five | Six
 
 data Tile = Tile Eye Eye
   deriving (Eq, Show)
+
+allTiles :: [Tile]
+allTiles = [Tile l r | l <- [Zero .. Six], r <- [Zero .. Six], l >= r]

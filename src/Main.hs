@@ -1,14 +1,16 @@
 module Main where
 
+import Boneyard
+import Game (dealTwoHands, initBoneyard)
 import Player
 import Tile
 
 main :: IO ()
-
-t1 = Tile One Zero
-
-t2 = Tile Six Four
-
-p1 = Hand [t1, t2]
-
-main = print p1
+main = do
+  Boneyard shuffled <- initBoneyard
+  let (hand1, hand2, boneyard) = dealTwoHands shuffled
+      player = Player hand1 0
+      enemy = Player hand2 0
+  print (length (hand player))
+  print (length (hand enemy))
+  print (length boneyard)
