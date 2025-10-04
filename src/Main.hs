@@ -1,6 +1,5 @@
 module Main where
 
-import Board
 import Boneyard
 import Game
 import Player
@@ -14,10 +13,16 @@ main = do
       enemy = Player hand2 0
       starter = pickFirstTurn (player, getHighestTile (hand player)) (enemy, getHighestTile (hand enemy))
 
-      firstMove =
+      firstBoard =
         if starter == player
-          then getHighestTile (hand player)
-          else getHighestTile (hand enemy)
-      board = emptyBoard firstMove
+          then playFirstTurn (hand player)
+          else playFirstTurn (hand enemy)
 
-  print board
+  -- TEMPORARY
+  let gameOver = False
+  print firstBoard
+  if not gameOver
+    then do
+      nextBoard <- playNextTurn (hand player) firstBoard
+      print nextBoard
+    else print "Game Over!"

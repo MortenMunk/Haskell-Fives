@@ -1,5 +1,6 @@
 module Game where
 
+import Board
 import Boneyard
 import Data.List (maximumBy)
 import Data.Ord (comparing)
@@ -29,9 +30,6 @@ getHighestTile (Hand tiles) =
   where
     tileValue (Tile l r) = fromEnum l + fromEnum r
 
-isDoubleTile :: Tile -> Bool
-isDoubleTile (Tile l r) = l == r
-
 pickFirstTurn :: (Player, Tile) -> (Player, Tile) -> Player
 pickFirstTurn (p1, t1) (p2, t2)
   | isDoubleTile t1 && not (isDoubleTile t2) = p1
@@ -40,3 +38,17 @@ pickFirstTurn (p1, t1) (p2, t2)
   | otherwise = p2
   where
     tileValue (Tile l r) = fromEnum l + fromEnum r
+
+playFirstTurn :: Hand Tile -> Board
+playFirstTurn h = emptyBoard (getHighestTile h)
+
+playNextTurn :: Hand Tile -> Board -> IO Board
+playNextTurn hand board = do
+  tile <- pickTile hand
+  case placeTile tile board of
+    Just newBoard -> do
+      putStrLn "Tile placed!"
+      return newBoard
+    Nothing -> do
+      putStrLn "Illegal move - Try again!"
+      playNextTurn hand board

@@ -8,3 +8,6 @@ data Tile = Tile Eye Eye
 
 allTiles :: [Tile]
 allTiles = [Tile l r | l <- [Zero .. Six], r <- [Zero .. Six], l >= r]
+
+isDoubleTile :: Tile -> Bool
+isDoubleTile (Tile l r) = l == r
