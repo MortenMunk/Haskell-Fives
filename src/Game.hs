@@ -8,6 +8,9 @@ import Player
 import System.Random.Shuffle (shuffleM)
 import Tile
 
+data Turn = PlayerTurn | EnemyTurn
+  deriving (Eq, Show)
+
 initBoneyard :: IO (Boneyard Tile)
 initBoneyard = Boneyard <$> shuffleM allTiles
 
@@ -30,12 +33,12 @@ getHighestTile (Hand tiles) =
   where
     tileValue (Tile l r) = fromEnum l + fromEnum r
 
-pickFirstTurn :: (Player, Tile) -> (Player, Tile) -> Player
+pickFirstTurn :: (Player, Tile) -> (Player, Tile) -> Turn
 pickFirstTurn (p1, t1) (p2, t2)
-  | isDoubleTile t1 && not (isDoubleTile t2) = p1
-  | isDoubleTile t2 && not (isDoubleTile t1) = p2
-  | tileValue t1 > tileValue t2 = p1
-  | otherwise = p2
+  | isDoubleTile t1 && not (isDoubleTile t2) = PlayerTurn
+  | isDoubleTile t2 && not (isDoubleTile t1) = EnemyTurn
+  | tileValue t1 > tileValue t2 = PlayerTurn
+  | otherwise = EnemyTurn
   where
     tileValue (Tile l r) = fromEnum l + fromEnum r
 
@@ -44,7 +47,7 @@ playFirstTurn h = emptyBoard (getHighestTile h)
 
 playNextTurn :: Hand Tile -> Board -> IO Board
 playNextTurn hand board = do
-  tile <- pickTile hand
+  tile <- pickTile hand board
   case placeTile tile board of
     Just newBoard -> do
       putStrLn "Tile placed!"

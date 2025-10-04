@@ -13,10 +13,9 @@ main = do
       enemy = Player hand2 0
       starter = pickFirstTurn (player, getHighestTile (hand player)) (enemy, getHighestTile (hand enemy))
 
-      firstBoard =
-        if starter == player
-          then playFirstTurn (hand player)
-          else playFirstTurn (hand enemy)
+      firstBoard = case starter of
+        PlayerTurn -> playFirstTurn (hand player)
+        EnemyTurn -> playFirstTurn (hand enemy)
 
   -- TEMPORARY
   let gameOver = False
