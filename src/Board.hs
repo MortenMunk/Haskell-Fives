@@ -4,8 +4,10 @@ import Game
 import Tile
 
 data Ends = TwoEnds Eye Eye | FourEnds Eye Eye Eye Eye
+  deriving (Show)
 
 data Board = Board {ends :: Ends, tiles :: [Tile]}
+  deriving (Show)
 
 emptyBoard :: Tile -> Board
 emptyBoard (Tile l r) =
