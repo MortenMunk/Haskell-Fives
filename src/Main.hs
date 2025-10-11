@@ -17,11 +17,17 @@ main = do
         PlayerTurn -> playFirstTurn (hand player)
         EnemyTurn -> playFirstTurn (hand enemy)
 
-  -- TEMPORARY
-  let gameOver = False
+      player' =
+        if starter == PlayerTurn
+          then Player (removeTile (getHighestTile hand1) hand1) 0
+          else player
+
+      enemy' =
+        if starter == EnemyTurn
+          then Player (removeTile (getHighestTile hand2) hand2) 0
+          else player
+
+  putStrLn ("\nStarter: " ++ show starter)
   print firstBoard
-  if not gameOver
-    then do
-      nextBoard <- playNextTurn (hand player) firstBoard
-      print nextBoard
-    else print "Game Over!"
+
+  gameLoop player' enemy' firstBoard boneyard

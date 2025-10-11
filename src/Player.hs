@@ -3,6 +3,8 @@
 module Player where
 
 import Board
+import Data.List (maximumBy)
+import Data.Ord (comparing)
 import Tile
 
 newtype Hand a = Hand [a]
@@ -19,11 +21,15 @@ pickTile (Hand tiles) board = do
   mapM_ (\(i, t) -> putStrLn (show i ++ ": " ++ show t ++ if t `elem` playable then " ✅" else "")) (zip [1 ..] tiles)
   putStrLn "Pick tile by number:"
   input <- getLine
-  let idx = read input :: Int
-  return (tiles !! (idx - 1))
-
--- playEnemyTurn :: Hand Tile -> Board -> IO (Maybe Board)
--- playEnemyTurn tiles board =
+  case reads input :: [(Int, String)] of
+    [(idx, _)]
+      | idx >= 1 && idx <= length tiles -> return (tiles !! (idx - 1))
+      | otherwise -> do
+          putStrLn "Invalid number! Try again."
+          pickTile (Hand tiles) board
+    _ -> do
+      putStrLn "Please enter a valid number!"
+      pickTile (Hand tiles) board
 
 canPlace :: Tile -> Board -> Bool
 canPlace tile board = case placeTile tile board of
@@ -32,3 +38,16 @@ canPlace tile board = case placeTile tile board of
 
 legalTiles :: Hand Tile -> Board -> [Tile]
 legalTiles (Hand tiles) board = [t | t <- tiles, canPlace t board]
+
+playEnemyTurn :: Hand Tile -> Board -> IO (Board, Hand Tile)
+playEnemyTurn hand@(Hand tiles) board = do
+  let tile = maximumBy (comparing tileValue) (legalTiles hand board)
+  putStrLn ("Enemy plays: " ++ show tile)
+  let Just newBoard = placeTile tile board
+      remaining = Hand (filter (/= tile) tiles)
+  return (newBoard, remaining)
+  where
+    tileValue (Tile l r) = fromEnum l + fromEnum r
+
+removeTile :: Tile -> Hand Tile -> Hand Tile
+removeTile t (Hand ts) = Hand (filter (/= t) ts)
