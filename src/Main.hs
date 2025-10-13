@@ -4,6 +4,7 @@ import Boneyard
 import Game
 import Player
 import Tile
+import UI
 
 main :: IO ()
 main = do
@@ -30,4 +31,5 @@ main = do
   putStrLn ("\nStarter: " ++ show starter)
   print firstBoard
 
-  gameLoop player' enemy' firstBoard boneyard
+  -- gameLoop player' enemy' firstBoard boneyard
+  runUI player' enemy' firstBoard boneyard
