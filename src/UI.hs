@@ -12,6 +12,8 @@ import Tile
 
 data St = St {player :: Player, enemy :: Player, board :: Board, boneyard :: Boneyard Tile, selected :: Int}
 
+data TileOrientation = HorizontalTile | VerticalTile
+
 selectedAttr, normalAttr :: AttrName
 selectedAttr = attrName "selected"
 normalAttr = attrName "normal"
@@ -31,8 +33,7 @@ drawUI s =
                   (Pad 1)
                   ( center
                       ( vBox
-                          [ str "Board:",
-                            str (show (board s))
+                          [ renderBoard (board s)
                           ]
                       )
                   ),
@@ -66,75 +67,47 @@ legendBox =
         )
     )
 
-renderPips :: Int -> Widget ()
-renderPips n =
-  let dot b = if b then "●" else " "
-      row a b c = hCenter (hBox [str (dot a), str (dot b), str (dot c)])
-   in vBox
-        ( case n of
-            0 ->
-              [ row False False False,
-                row False False False,
-                row False False False
-              ]
-            1 ->
-              [ row False False False,
-                row False True False,
-                row False False False
-              ]
-            2 ->
-              [ row True False False,
-                row False False False,
-                row False False True
-              ]
-            3 ->
-              [ row True False False,
-                row False True False,
-                row False False True
-              ]
-            4 ->
-              [ row True False True,
-                row False False False,
-                row True False True
-              ]
-            5 ->
-              [ row True False True,
-                row False True False,
-                row True False True
-              ]
-            6 ->
-              [ row True False True,
-                row True False True,
-                row True False True
-              ]
-            _ ->
-              [ row False False False,
-                row False False False,
-                row False False False
-              ]
-        )
-
-renderTile :: Tile -> Widget ()
-renderTile (Tile l r) =
-  vLimit 5 $
-    hLimit 13 $
-      border
-        ( hBox
-            [ padLeftRight 1 (renderPips (fromEnum l)),
-              vBorder,
-              padLeftRight 1 (renderPips (fromEnum r))
-            ]
-        )
+renderTile :: TileOrientation -> Tile -> Widget ()
+renderTile HorizontalTile (Tile l r) =
+  vLimit 3 $
+    hLimit 9 $
+      border $
+        hBox
+          [ padLeftRight 1 (str (show (fromEnum l))),
+            vBorder,
+            padLeftRight 1 (str (show (fromEnum r)))
+          ]
+renderTile VerticalTile (Tile l r) =
+  hLimit 9 $
+    vLimit 3 $
+      border $
+        vBox
+          [ hCenter (str (show (fromEnum l))),
+            hBorder,
+            hCenter (str (show (fromEnum r)))
+          ]
 
 renderHand :: Hand Tile -> Int -> Widget ()
 renderHand (Hand tiles) selectedIndex =
   hBox (zipWith renderIndexedTile [0 ..] tiles)
   where
     renderIndexedTile i tile =
-      let w = renderTile tile
+      let w = renderTile HorizontalTile tile
        in if i == selectedIndex
             then withAttr selectedAttr w
             else withAttr normalAttr w
+
+renderBoardTile :: Bool -> Tile -> Widget ()
+renderBoardTile isVertical tile =
+  if isVertical
+    then renderTile VerticalTile tile
+    else renderTile HorizontalTile tile
+
+renderBoard :: Board -> Widget ()
+renderBoard (Board ends tilesPlayed) =
+  vBox
+    [ hBox (map (renderTile HorizontalTile) (reverse tilesPlayed))
+    ]
 
 handleEvent :: BrickEvent () e -> EventM n St ()
 handleEvent (VtyEvent (V.EvKey V.KLeft [])) =
@@ -169,7 +142,6 @@ handleEvent (VtyEvent (V.EvKey V.KEnter [])) = do
                   { hand = newEnemyHand
                   }
             }
-  liftIO (putStrLn ("played " ++ show chosen))
   pure ()
 handleEvent (VtyEvent (V.EvKey (V.KChar 'q') [])) = halt
 handleEvent _ = return ()
