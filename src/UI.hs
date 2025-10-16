@@ -6,6 +6,7 @@ import Brick
 import Brick.Widgets.Border (border, borderWithLabel, hBorder, vBorder)
 import Brick.Widgets.Center (center, hCenter)
 import Control.Monad.IO.Class
+import Data.List (intersperse)
 import qualified Graphics.Vty as V
 import Player
 import Tile
@@ -78,8 +79,8 @@ renderTile HorizontalTile (Tile l r) =
             padLeftRight 1 (str (show (fromEnum r)))
           ]
 renderTile VerticalTile (Tile l r) =
-  hLimit 9 $
-    vLimit 3 $
+  hLimit 5 $
+    vLimit 5 $
       border $
         vBox
           [ hCenter (str (show (fromEnum l))),
@@ -104,10 +105,23 @@ renderBoardTile isVertical tile =
     else renderTile HorizontalTile tile
 
 renderBoard :: Board -> Widget ()
-renderBoard (Board ends tilesPlayed) =
-  vBox
-    [ hBox (map (renderTile HorizontalTile) (reverse tilesPlayed))
-    ]
+renderBoard (Board maybeSp brs) =
+  let get dir = maybe [] id (lookup dir brs)
+      northTiles = get North
+      southTiles = get South
+      eastTiles = get East
+      westTiles = get West
+      spinnerWidget = maybe emptyWidget (renderTile VerticalTile) maybeSp
+   in center $
+        vBox
+          [ vBox (reverse (map (renderTile VerticalTile) northTiles)),
+            hBox
+              ( map (renderTile HorizontalTile) westTiles
+                  ++ [spinnerWidget]
+                  ++ map (renderTile HorizontalTile) eastTiles
+              ),
+            vBox (map (renderTile VerticalTile) southTiles)
+          ]
 
 handleEvent :: BrickEvent () e -> EventM n St ()
 handleEvent (VtyEvent (V.EvKey V.KLeft [])) =
@@ -128,21 +142,24 @@ handleEvent (VtyEvent (V.EvKey V.KEnter [])) = do
     else case placeTile chosen (board st) of
       Nothing -> liftIO (putStrLn "invalid placement") >> pure ()
       Just newBoard -> do
+        liftIO $ do
+          putStrLn "Player move applied"
+          putStrLn "Updated board:"
+          print newBoard
         let newHand = removeTile chosen (hand (player st))
             newPlayer = (player st) {hand = newHand}
             baseSt = st {board = newBoard, player = newPlayer, selected = 0}
-
-        (newBoard', newEnemyHand) <- liftIO $ playEnemyTurn (hand (enemy st)) newBoard
-
+        (newBoard', newEnemyHand) <- liftIO $ do
+          result <- playEnemyTurn (hand (enemy st)) newBoard
+          putStrLn "Enemy move applied"
+          putStrLn "Board after enemy turn:"
+          print (fst result)
+          pure result
         put
           baseSt
             { board = newBoard',
-              enemy =
-                (enemy st)
-                  { hand = newEnemyHand
-                  }
+              enemy = (enemy st) {hand = newEnemyHand}
             }
-  pure ()
 handleEvent (VtyEvent (V.EvKey (V.KChar 'q') [])) = halt
 handleEvent _ = return ()
 

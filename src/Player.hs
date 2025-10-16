@@ -41,13 +41,29 @@ legalTiles (Hand tiles) board = [t | t <- tiles, canPlace t board]
 
 playEnemyTurn :: Hand Tile -> Board -> IO (Board, Hand Tile)
 playEnemyTurn hand@(Hand tiles) board = do
-  let tile = maximumBy (comparing tileValue) (legalTiles hand board)
-  putStrLn ("Enemy plays: " ++ show tile)
-  let Just newBoard = placeTile tile board
-      remaining = Hand (filter (/= tile) tiles)
-  return (newBoard, remaining)
+  let playable = legalTiles hand board
+  if null playable
+    then do
+      putStrLn "Enemy has no legal moves!"
+      return (board, hand)
+    else do
+      let tile = maximumBy (comparing tileValue) playable
+          placed = placeTile tile board
+      case placed of
+        Just newBoard -> do
+          let remaining = Hand (filter (/= tile) tiles)
+          return (newBoard, remaining)
+        Nothing -> do
+          let flipped = flipTile tile
+          case placeTile flipped board of
+            Just newBoard -> do
+              let remaining = Hand (filter (/= tile) tiles)
+              return (newBoard, remaining)
+            Nothing -> do
+              return (board, hand)
   where
     tileValue (Tile l r) = fromEnum l + fromEnum r
+    flipTile (Tile l r) = Tile r l
 
 removeTile :: Tile -> Hand Tile -> Hand Tile
 removeTile t (Hand ts) = Hand (filter (/= t) ts)
